@@ -3,6 +3,8 @@
 import os
 import requests
 import json
+import zipfile
+
 from bs4 import BeautifulSoup
 
 def check_CVE_updates():
@@ -48,24 +50,27 @@ def check_CVE_updates():
                 else:
                     # need to be updated
                     print(" Old data.", end="")
-                    download_CVE(zip_url, "./cve/" + cve_name + ".json.zip")
+                    download_CVE(zip_url, "./cve/", cve_name + ".json.zip")
                     print(" Latest CVE data file in downloaded.")
             else:
                 cve_json_conf[cve_name] = dict()
                 print(" New data.", end="")
-                download_CVE(zip_url, "./cve/" + cve_name + ".json.zip")
+                download_CVE(zip_url, "./cve/", cve_name + ".json.zip")
                 print(" Latest CVE data file in downloaded.")
             cve_json_conf[cve_name]['Updated'] = update_date
             cve_json_conf[cve_name]['zip_url'] = zip_url
     with open("./cve/cve-conf.json", "w") as f:
         json.dump(cve_json_conf, f)
 
-def download_CVE(url, file_name):
+def download_CVE(url, file_dir, file_name):
     """ This function download CVE file using inserted URL
     """
-    with open(file_name, "wb") as f:    # open in binary mode
-        response = requests.get(url)             # get requests
-        f.write(response.content)    # write to file
+    with open(file_dir + file_name, "wb") as f:    # open in binary mode
+        response = requests.get(url)    # get requests
+        f.write(response.content)       # write to file
+    zip_file = zipfile.ZipFile(file_dir + file_name)
+    zip_file.extractall(file_dir)
+    os.remove(file_dir + file_name)
 
 if __name__ == "__main__":
     check_CVE_updates()
